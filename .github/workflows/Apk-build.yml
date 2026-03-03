@@ -17,9 +17,12 @@ jobs:
     timeout-minutes: 90
 
     steps:
-    # 1️⃣ Checkout code (fixed to v3 to avoid tar issue)
+    # 1️⃣ Checkout code as zip (avoids tar error)
     - name: Checkout code
       uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+        archive: zip
 
     # 2️⃣ Cache buildozer global directory
     - name: Cache buildozer global directory
@@ -43,13 +46,13 @@ jobs:
       run: |
         sudo apt-get update -qq
         sudo apt-get install -y --no-install-recommends \
-          git zip unzip tar openjdk-17-jdk \
+          git zip unzip openjdk-17-jdk \
           python3-pip python3-setuptools python3-wheel \
           libffi-dev libssl-dev \
           libgstreamer1.0-dev libunwind-dev \
           build-essential ccache \
           autoconf automake libtool \
-          lld wget unzip
+          lld wget unzip tar
 
     # 5️⃣ Set up Java 17
     - name: Set up Java 17
