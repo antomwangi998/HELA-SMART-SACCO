@@ -1,0 +1,78 @@
+[app]
+
+# ── Identity ─────────────────────────────────────────────────────────────────
+title           = HELA SMART SACCO
+package.name    = helasacco
+package.domain  = com.helasacco
+
+# ── Source ───────────────────────────────────────────────────────────────────
+source.dir      = .
+source.include_exts = py,png,jpg,kv,atlas,db,json,ttf,otf
+
+# Exclude dev/cache files
+source.exclude_dirs = tests,bin,__pycache__,.git,venv,exports,backups,logs,temp
+
+# ── Version ──────────────────────────────────────────────────────────────────
+version         = 3.0.0
+# Increment this every release:
+android.numeric_version = 1
+
+# ── Python / Kivy ────────────────────────────────────────────────────────────
+requirements    = python3,kivy==2.3.0,kivymd==1.2.0,pillow
+
+# ── Orientation & display ────────────────────────────────────────────────────
+orientation     = portrait
+fullscreen      = 0
+
+# ── Android specifics ────────────────────────────────────────────────────────
+android.minapi          = 24
+android.targetapi       = 33
+android.archs           = arm64-v8a, armeabi-v7a
+
+# Permissions needed by the app
+android.permissions = \
+    INTERNET,\
+    WRITE_EXTERNAL_STORAGE,\
+    READ_EXTERNAL_STORAGE,\
+    CALL_PHONE,\
+    SEND_SMS,\
+    READ_CONTACTS,\
+    VIBRATE,\
+    RECEIVE_BOOT_COMPLETED
+
+# Intent filters (deep links, file sharing)
+android.add_activities = org.kivy.android.PythonActivity
+
+# Keep data between app updates
+android.allow_backup = True
+
+# NDK / SDK versions (buildozer auto-downloads these)
+android.ndk     = 25b
+android.sdk     = 33
+android.ndk_api = 24
+
+# Accept SDK licences automatically in CI
+android.accept_sdk_license = True
+
+# ── Gradle ───────────────────────────────────────────────────────────────────
+android.gradle_dependencies =
+
+# ── Icons & splash ───────────────────────────────────────────────────────────
+# Place these files in the project root:
+# icon.png          — 512×512 app icon
+# presplash.png     — splash screen (any size, white bg recommended)
+# android.presplash.color = #006C4C
+
+# ── iOS (future) ─────────────────────────────────────────────────────────────
+# ios.kivy_ios_url  = https://github.com/kivy/kivy-ios
+# ios.ios_deploy_url = ...
+
+# ── Logging ──────────────────────────────────────────────────────────────────
+log_level = 1
+
+[buildozer]
+# Buildozer working directory (android SDK/NDK downloads go here)
+build_dir    = ./.buildozer
+bin_dir      = ./bin
+
+warn_on_root = 1
