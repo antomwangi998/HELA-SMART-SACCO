@@ -13,11 +13,11 @@ env:
 
 jobs:
   build-apk:
-    runs-on: ubuntu-22.04  # GitHub-hosted runner with tar preinstalled
+    runs-on: ubuntu-latest  # GitHub-hosted runner with tar preinstalled
     timeout-minutes: 90
 
     steps:
-    # 1️⃣ Checkout code (v3)
+    # 1️⃣ Checkout code
     - name: Checkout code
       uses: actions/checkout@v3
 
