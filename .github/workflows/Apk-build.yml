@@ -1,0 +1,104 @@
+name: Build HELA SACCO APK
+
+on:
+  push:
+    branches: [ main, master ]
+  workflow_dispatch:          # allows manual trigger from GitHub UI
+
+jobs:
+  build-apk:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 90
+
+    steps:
+    # ── 1. Checkout ───────────────────────────────────────────────────────────
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    # ── 2. Cache buildozer global dir (NDK/SDK — ~4 GB, saves 20+ min) ───────
+    - name: Cache buildozer global directory
+      uses: actions/cache@v4
+      with:
+        path: ~/.buildozer
+        key: buildozer-${{ runner.os }}-${{ hashFiles('buildozer.spec') }}
+        restore-keys: |
+          buildozer-${{ runner.os }}-
+
+    # ── 3. Cache .gradle ──────────────────────────────────────────────────────
+    - name: Cache Gradle
+      uses: actions/cache@v4
+      with:
+        path: ~/.gradle
+        key: gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle*') }}
+        restore-keys: gradle-${{ runner.os }}-
+
+    # ── 4. System dependencies ────────────────────────────────────────────────
+    - name: Install system dependencies
+      run: |
+        sudo apt-get update -qq
+        sudo apt-get install -y --no-install-recommends           git zip unzip openjdk-17-jdk           python3-pip python3-setuptools python3-wheel           libffi-dev libssl-dev           libgstreamer1.0-dev           build-essential ccache           autoconf automake libtool           lld
+
+    # ── 5. Java 17 ────────────────────────────────────────────────────────────
+    - name: Set up Java 17
+      uses: actions/setup-java@v4
+      with:
+        distribution: temurin
+        java-version: '17'
+
+    # ── 6. Python build tools ─────────────────────────────────────────────────
+    - name: Install buildozer and dependencies
+      run: |
+        pip3 install --upgrade pip
+        pip3 install buildozer cython==0.29.37
+        buildozer --version
+
+    # ── 7. Accept Android licenses ────────────────────────────────────────────
+    - name: Accept Android SDK licenses
+      run: |
+        mkdir -p "$HOME/.android"
+        touch "$HOME/.android/repositories.cfg"
+        yes | sdkmanager --licenses 2>/dev/null || true
+      continue-on-error: true
+
+    # ── 8. Build debug APK ────────────────────────────────────────────────────
+    - name: Build APK (debug)
+      run: |
+        buildozer -v android debug 2>&1 | tee build.log
+      env:
+        ANDROID_SDK_ROOT: ${{ env.ANDROID_HOME }}
+
+    # ── 9. Find APK ───────────────────────────────────────────────────────────
+    - name: Find built APK
+      id: find_apk
+      run: |
+        APK=$(find . -name "*.apk" | head -1)
+        echo "apk_path=$APK" >> $GITHUB_OUTPUT
+        echo "Found APK: $APK"
+        ls -lh $APK
+
+    # ── 10. Upload APK as artifact (download from Actions tab) ────────────────
+    - name: Upload APK artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: hela-sacco-debug-apk
+        path: ${{ steps.find_apk.outputs.apk_path }}
+        retention-days: 30
+
+    # ── 11. Upload build log on failure ───────────────────────────────────────
+    - name: Upload build log on failure
+      if: failure()
+      uses: actions/upload-artifact@v4
+      with:
+        name: build-log
+        path: build.log
+        retention-days: 7
+
+    # ── 12. (Optional) Create GitHub Release on version tag ───────────────────
+    - name: Create Release
+      if: startsWith(github.ref, 'refs/tags/v')
+      uses: softprops/action-gh-release@v2
+      with:
+        files: ${{ steps.find_apk.outputs.apk_path }}
+        generate_release_notes: true
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
